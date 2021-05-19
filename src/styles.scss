@@ -1,0 +1,23 @@
+body {
+  cursor: pointer;
+}
+
+.tile {
+  & > * {
+    position: absolute;
+  }
+
+  :not(:first-child):hover {
+    // transform: scale(1.2);
+    // transform-origin: center;
+    // transition-timing-function: ease-out;
+    // transition-duration: 100ms;
+    // z-index: 1;
+  }
+
+  .selector {
+    & > * {
+      position: absolute;
+    }
+  }
+}
