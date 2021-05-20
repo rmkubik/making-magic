@@ -7,12 +7,12 @@ import "./styles.scss";
 const initialTiles = constructMatrixFromTemplate(
   (char) => char,
   `
-  . . . . . .
-  . b . . . .
-  . . . . . .
-  . . . . . .
-  . . . . . .
-  . . . . . .
+  t h 8 3 a f
+  w e e a e f
+  b t s l s L
+  t h b a l E
+  8 A S h 4 w
+  F f l m M l
 `
 );
 

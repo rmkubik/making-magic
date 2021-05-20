@@ -1,6 +1,6 @@
 import React from "react";
 
-const createBackground = ({ location, createSprite }) => {
+const createBackground = ({ location, selected, createSprite }) => {
   const isEvenCol = location.col % 2 === 0;
   const isEvenRow = location.row % 2 === 0;
 
@@ -12,19 +12,59 @@ const createBackground = ({ location, createSprite }) => {
     col = isEvenCol ? 3 : 4;
   }
 
-  return createSprite({ row: 2, col });
+  const row = selected ? 4 : 2;
+
+  return createSprite({ row, col });
 };
 
 const createItem = ({ tile, createSprite }) => {
-  if (tile === ".") {
-    return null;
+  switch (tile) {
+    case "p":
+      return createSprite({ row: 0, col: 0 });
+    case "t":
+      return createSprite({ row: 0, col: 1 });
+    case "s":
+      return createSprite({ row: 0, col: 2 });
+    case "S":
+      return createSprite({ row: 0, col: 3 });
+    case "m":
+      return createSprite({ row: 0, col: 4 });
+    case "M":
+      return createSprite({ row: 0, col: 5 });
+    case "a":
+      return createSprite({ row: 0, col: 6 });
+    case "e":
+      return createSprite({ row: 0, col: 7 });
+    case "A":
+      return createSprite({ row: 0, col: 8 });
+    case "E":
+      return createSprite({ row: 0, col: 9 });
+    case "l":
+      return createSprite({ row: 1, col: 0 });
+    case "h":
+      return createSprite({ row: 1, col: 1 });
+    case "8":
+      return createSprite({ row: 1, col: 2 });
+    case "w":
+      return createSprite({ row: 1, col: 3 });
+    case "L":
+      return createSprite({ row: 1, col: 4 });
+    case "d":
+      return createSprite({ row: 1, col: 5 });
+    case "b":
+      return createSprite({ row: 1, col: 6 });
+    case "f":
+      return createSprite({ row: 1, col: 7 });
+    case "3":
+      return createSprite({ row: 1, col: 8 });
+    case "4":
+      return createSprite({ row: 1, col: 9 });
+    case "F":
+      return createSprite({ row: 2, col: 7 });
+    case ".":
+    default:
+      return null;
   }
-
-  if (tile === "b") {
-    return createSprite({ row: 0, col: 0 });
-  }
-
-  return null;
 };
 
 const createSelector = ({
@@ -59,7 +99,7 @@ const Tile = ({
   onClick,
   selectedNeighborDirections,
 }) => {
-  const background = createBackground({ location, createSprite });
+  const background = createBackground({ location, createSprite, selected });
   const item = createItem({ tile, createSprite });
   const selector = createSelector({
     selected,
