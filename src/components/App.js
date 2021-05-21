@@ -1,17 +1,86 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Grid from "./Grid";
 import Tile from "./Tile";
 import SpriteSheet from "./SpriteSheet";
 import sprites from "../../assets/sprites.png";
 import {
   compareLocations,
+  constructMatrix,
+  constructMatrixFromTemplate,
   getCrossDirections,
   getLocation,
   getNeighbors,
 } from "functional-game-utils";
-import { remove } from "ramda";
+import { remove, omit } from "ramda";
+import { pickRandomFromArray } from "../utils/random";
 
 // use mobx-state-tree to store game state
+
+const items = {
+  BOTTLE: {
+    sprite: { row: 0, col: 0 },
+  },
+  FLOWER_TULIP: {
+    sprite: { row: 0, col: 1 },
+  },
+  SKULL: {
+    sprite: { row: 0, col: 2 },
+  },
+  SKULL_POWER: {
+    sprite: { row: 0, col: 3 },
+  },
+  MUSHROOM_RED: {
+    sprite: { row: 0, col: 4 },
+  },
+  MUSHROOM_GREEN: {
+    sprite: { row: 0, col: 5 },
+  },
+  ACORN: {
+    sprite: { row: 0, col: 6 },
+  },
+  EYE: {
+    sprite: { row: 0, col: 7 },
+  },
+  AMETHYST: {
+    sprite: { row: 0, col: 8 },
+  },
+  EGG_BLUE: {
+    sprite: { row: 0, col: 9 },
+  },
+  LEAF_GREEN: {
+    sprite: { row: 1, col: 0 },
+  },
+  FEATHER: {
+    sprite: { row: 1, col: 1 },
+  },
+  SPIDER: {
+    sprite: { row: 1, col: 2 },
+  },
+  WORM: {
+    sprite: { row: 1, col: 3 },
+  },
+  LEAF_MAPLE: {
+    sprite: { row: 1, col: 4 },
+  },
+  FLOWER_SUNFLOWER: {
+    sprite: { row: 1, col: 5 },
+  },
+  BUTTERFLY: {
+    sprite: { row: 1, col: 6 },
+  },
+  FLY: {
+    sprite: { row: 1, col: 7 },
+  },
+  EGG_GREEN: {
+    sprite: { row: 1, col: 8 },
+  },
+  EGG_RED: {
+    sprite: { row: 1, col: 9 },
+  },
+  FAIRY: {
+    sprite: { row: 2, col: 7 },
+  },
+};
 
 const spriteConfig = {
   size: 16,
@@ -96,9 +165,25 @@ const getSelectedNeighborDirections = ({ tiles, location, selected }) => {
   );
 };
 
-const App = ({ initialTiles }) => {
-  const [tiles, setTiles] = useState(initialTiles);
+const App = () => {
+  const [tiles, setTiles] = useState([[""]]);
   const [selected, setSelected] = useState([]);
+
+  useEffect(() => {
+    const initialTiles = constructMatrix(
+      () => {
+        const itemKeys = Object.keys(omit(["BOTTLE"], items));
+
+        return pickRandomFromArray(itemKeys);
+      },
+      {
+        height: 10,
+        width: 10,
+      }
+    );
+
+    setTiles(initialTiles);
+  }, [setTiles]);
 
   const addSelection = (location) => {
     setSelected([...selected, location]);
@@ -121,6 +206,7 @@ const App = ({ initialTiles }) => {
         <Tile
           createSprite={createSprite}
           tile={tile}
+          items={items}
           location={location}
           selected={isLocationSelected({ location, selected })}
           selectedNeighborDirections={getSelectedNeighborDirections({
