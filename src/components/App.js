@@ -168,6 +168,7 @@ const getSelectedNeighborDirections = ({ tiles, location, selected }) => {
 const App = () => {
   const [tiles, setTiles] = useState([[""]]);
   const [selected, setSelected] = useState([]);
+  const [isMouseDown, setMouseDown] = useState(false);
 
   useEffect(() => {
     const initialTiles = constructMatrix(
@@ -200,30 +201,48 @@ const App = () => {
   };
 
   return (
-    <Grid
-      tiles={tiles}
-      renderTile={(tile, location) => (
-        <Tile
-          createSprite={createSprite}
-          tile={tile}
-          items={items}
-          location={location}
-          selected={isLocationSelected({ location, selected })}
-          selectedNeighborDirections={getSelectedNeighborDirections({
-            tiles,
-            location,
-            selected,
-          })}
-          onClick={() =>
-            isLocationSelected({ location, selected })
-              ? removeSelection(location)
-              : addSelection(location)
-          }
-          key={JSON.stringify(location)}
-        />
-      )}
-      cellSize={`${spriteConfig.size * spriteConfig.scale}px`}
-    />
+    <>
+      <Grid
+        tiles={tiles}
+        renderTile={(tile, location) => (
+          <Tile
+            createSprite={createSprite}
+            tile={tile}
+            items={items}
+            location={location}
+            selected={isLocationSelected({ location, selected })}
+            selectedNeighborDirections={getSelectedNeighborDirections({
+              tiles,
+              location,
+              selected,
+            })}
+            onMouseDown={() => {
+              setMouseDown(true);
+              isLocationSelected({ location, selected })
+                ? setSelected([])
+                : setSelected([location]);
+            }}
+            onMouseUp={() => {
+              setMouseDown(false);
+            }}
+            onMouseEnter={() => {
+              if (isMouseDown) {
+                console.log(location);
+                addSelection(location);
+              }
+            }}
+            // onClick={() =>
+            //   isLocationSelected({ location, selected })
+            //     ? removeSelection(location)
+            //     : addSelection(location)
+            // }
+            key={JSON.stringify(location)}
+          />
+        )}
+        cellSize={`${spriteConfig.size * spriteConfig.scale}px`}
+      />
+      {/* <pre>{JSON.stringify({ isMouseDown })}</pre> */}
+    </>
   );
 };
 

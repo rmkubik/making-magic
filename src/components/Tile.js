@@ -55,6 +55,9 @@ const Tile = ({
   location,
   selected,
   onClick,
+  onMouseDown,
+  onMouseUp,
+  onMouseEnter,
   selectedNeighborDirections,
   items,
 }) => {
@@ -67,7 +70,13 @@ const Tile = ({
   });
 
   return (
-    <div className="tile" onClick={onClick}>
+    <div
+      className="tile"
+      onClick={onClick}
+      onMouseDown={onMouseDown}
+      onMouseUp={onMouseUp}
+      onMouseEnter={onMouseEnter}
+    >
       {background}
       {item}
       {selector}
