@@ -5,82 +5,17 @@ import SpriteSheet from "./SpriteSheet";
 import sprites from "../../assets/sprites.png";
 import {
   compareLocations,
+  constructArray,
   constructMatrix,
   constructMatrixFromTemplate,
   getCrossDirections,
   getLocation,
   getNeighbors,
 } from "functional-game-utils";
-import { remove, omit } from "ramda";
-import { pickRandomFromArray } from "../utils/random";
+import { remove, update } from "ramda";
+import { pickRandomFromArray, randIntBetween } from "../utils/random";
 
 // use mobx-state-tree to store game state
-
-const items = {
-  BOTTLE: {
-    sprite: { row: 0, col: 0 },
-  },
-  FLOWER_TULIP: {
-    sprite: { row: 0, col: 1 },
-  },
-  SKULL: {
-    sprite: { row: 0, col: 2 },
-  },
-  SKULL_POWER: {
-    sprite: { row: 0, col: 3 },
-  },
-  MUSHROOM_RED: {
-    sprite: { row: 0, col: 4 },
-  },
-  MUSHROOM_GREEN: {
-    sprite: { row: 0, col: 5 },
-  },
-  ACORN: {
-    sprite: { row: 0, col: 6 },
-  },
-  EYE: {
-    sprite: { row: 0, col: 7 },
-  },
-  AMETHYST: {
-    sprite: { row: 0, col: 8 },
-  },
-  EGG_BLUE: {
-    sprite: { row: 0, col: 9 },
-  },
-  LEAF_GREEN: {
-    sprite: { row: 1, col: 0 },
-  },
-  FEATHER: {
-    sprite: { row: 1, col: 1 },
-  },
-  SPIDER: {
-    sprite: { row: 1, col: 2 },
-  },
-  WORM: {
-    sprite: { row: 1, col: 3 },
-  },
-  LEAF_MAPLE: {
-    sprite: { row: 1, col: 4 },
-  },
-  FLOWER_SUNFLOWER: {
-    sprite: { row: 1, col: 5 },
-  },
-  BUTTERFLY: {
-    sprite: { row: 1, col: 6 },
-  },
-  FLY: {
-    sprite: { row: 1, col: 7 },
-  },
-  EGG_GREEN: {
-    sprite: { row: 1, col: 8 },
-  },
-  EGG_RED: {
-    sprite: { row: 1, col: 9 },
-  },
-  FAIRY: {
-    sprite: { row: 2, col: 7 },
-  },
-};
 
 const spriteConfig = {
   size: 16,
@@ -165,27 +100,187 @@ const getSelectedNeighborDirections = ({ tiles, location, selected }) => {
   );
 };
 
+const createBag = (items) => {
+  let bag = [...items];
+
+  // This function will return undefined once
+  // your bag is empty.
+  const pickFromBag = () => {
+    const pickedIndex = randIntBetween(0, bag.length - 1);
+    const pickedItem = bag[pickedIndex];
+
+    bag = remove(pickedIndex, 1, bag);
+
+    return pickedItem;
+  };
+
+  return pickFromBag;
+};
+
+const compareArraysIgnoringOrder = (a, b) => {
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  return a.every((aValue) => b.includes(aValue));
+};
+
 const App = () => {
   const [tiles, setTiles] = useState([[""]]);
   const [selected, setSelected] = useState([]);
   const [isMouseDown, setMouseDown] = useState(false);
   const [mouseDownLocation, setMouseDownLocation] = useState();
+  const [levels, setLevels] = useState([]);
+  const [currentLevel, setCurrentLevel] = useState(0);
+  const [prevCurrentLevel, setPrevCurrentLevel] = useState();
+  const [effects, setEffects] = useState([
+    "flammable",
+    "possessed", // a spirit posses this item
+    "thirst", // needs to hit enemies
+    "vampirism",
+    "disintegration",
+    "corruption",
+    "icy",
+    "undying",
+    "magnetic",
+    "stonecutter",
+    "trickster",
+    "ghastly",
+    "elastic",
+    "exploding",
+    "draconic",
+    "binding",
+    "forceful",
+    "precise",
+    "lawful",
+    "chaotic",
+    "lightbane",
+    "darkbane",
+    "animated",
+    "sentient",
+    "sacred",
+    "cursed",
+  ]);
+  const [items, setItems] = useState({
+    BOTTLE: {
+      sprite: { row: 0, col: 0 },
+    },
+    FLOWER_TULIP: {
+      sprite: { row: 0, col: 1 },
+    },
+    SKULL: {
+      sprite: { row: 0, col: 2 },
+    },
+    SKULL_POWER: {
+      sprite: { row: 0, col: 3 },
+    },
+    MUSHROOM_RED: {
+      sprite: { row: 0, col: 4 },
+    },
+    MUSHROOM_GREEN: {
+      sprite: { row: 0, col: 5 },
+    },
+    ACORN: {
+      sprite: { row: 0, col: 6 },
+    },
+    EYE: {
+      sprite: { row: 0, col: 7 },
+    },
+    AMETHYST: {
+      sprite: { row: 0, col: 8 },
+    },
+    EGG_BLUE: {
+      sprite: { row: 0, col: 9 },
+    },
+    LEAF_GREEN: {
+      sprite: { row: 1, col: 0 },
+    },
+    FEATHER: {
+      sprite: { row: 1, col: 1 },
+    },
+    SPIDER: {
+      sprite: { row: 1, col: 2 },
+    },
+    WORM: {
+      sprite: { row: 1, col: 3 },
+    },
+    LEAF_MAPLE: {
+      sprite: { row: 1, col: 4 },
+    },
+    FLOWER_SUNFLOWER: {
+      sprite: { row: 1, col: 5 },
+    },
+    BUTTERFLY: {
+      sprite: { row: 1, col: 6 },
+    },
+    FLY: {
+      sprite: { row: 1, col: 7 },
+    },
+    EGG_GREEN: {
+      sprite: { row: 1, col: 8 },
+    },
+    EGG_RED: {
+      sprite: { row: 1, col: 9 },
+    },
+    FAIRY: {
+      sprite: { row: 2, col: 7 },
+    },
+  });
+  const [recipes, setRecipes] = useState({
+    fireball: {
+      ingredients: ["LEAF_GREEN", "LEAF_GREEN", "MUSHROOM_RED"],
+      reveals: ["flammable"],
+    },
+    featherfall: {
+      ingredients: ["FEATHER", "FEATHER", "FEATHER", "FEATHER"],
+      reveals: ["flight"],
+    },
+  });
 
   useEffect(() => {
+    const pickEffectFromBag = createBag([
+      "flammable",
+      "flight",
+      "hunger",
+      "natural",
+    ]);
+
+    setLevels([
+      {
+        items: ["ACORN", "LEAF_GREEN", "FEATHER", "MUSHROOM_RED"],
+        identificationTarget: {
+          effects: constructArray(() => {
+            return { type: pickEffectFromBag(), revealed: false };
+          }, 3),
+        },
+      },
+    ]);
+  }, [setLevels, effects]);
+
+  useEffect(() => {
+    if (!levels[currentLevel]) {
+      return;
+    }
+
+    if (currentLevel === prevCurrentLevel) {
+      return;
+    }
+
     const initialTiles = constructMatrix(
       () => {
-        const itemKeys = Object.keys(omit(["BOTTLE"], items));
+        // const itemKeys = Object.keys(omit(["BOTTLE"], items));
 
-        return pickRandomFromArray(itemKeys);
+        return pickRandomFromArray(levels[currentLevel].items);
       },
       {
-        height: 10,
-        width: 10,
+        height: 6,
+        width: 4,
       }
     );
 
+    setPrevCurrentLevel(currentLevel);
     setTiles(initialTiles);
-  }, [setTiles]);
+  }, [setTiles, levels, currentLevel]);
 
   const addSelection = (location) => {
     setSelected([...selected, location]);
@@ -200,6 +295,45 @@ const App = () => {
 
     setSelected(newSelected);
   };
+
+  const revealEffect = (targetType) => {
+    const currentlySelectedLevel = levels[currentLevel];
+
+    const revealedEffectIndex =
+      currentlySelectedLevel.identificationTarget.effects.findIndex(
+        (effect) => effect.type === targetType
+      );
+
+    if (revealedEffectIndex < 0) {
+      return;
+    }
+
+    const newEffects = update(
+      revealedEffectIndex,
+      {
+        ...currentlySelectedLevel.identificationTarget.effects[
+          revealedEffectIndex
+        ],
+        revealed: true,
+      },
+      currentlySelectedLevel.identificationTarget.effects
+    );
+
+    const newLevels = update(currentLevel, {
+      ...currentlySelectedLevel,
+      identificationTarget: {
+        ...currentlySelectedLevel.identificationTarget,
+        effects: newEffects,
+      },
+      levels,
+    });
+
+    setLevels(newLevels);
+  };
+
+  if (!levels[currentLevel]) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <>
@@ -248,10 +382,29 @@ const App = () => {
       <div
         onClick={() => {
           console.log(selected.map(getLocation(tiles)));
+          const selectedIngredients = selected.map(getLocation(tiles));
+
+          Object.entries(recipes).some(([recipeKey, recipe]) => {
+            if (
+              compareArraysIgnoringOrder(
+                selectedIngredients,
+                recipe.ingredients
+              )
+            ) {
+              console.log(`You cast the "${recipeKey}" spell.`);
+
+              revealEffect(recipe.reveals[0]);
+            }
+          });
         }}
       >
         {createSprite(items.BOTTLE.sprite)}
       </div>
+      <ul>
+        {levels[currentLevel].identificationTarget.effects.map((effect) => (
+          <li key={effect.type}>{effect.revealed ? effect.type : "???"}</li>
+        ))}
+      </ul>
       {/* <pre>{JSON.stringify({ isMouseDown })}</pre> */}
     </>
   );

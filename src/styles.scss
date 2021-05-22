@@ -1,4 +1,17 @@
+@font-face {
+  font-family: "ChevyRayLantern";
+  src: url("../assets/ChevyRay\ -\ Lantern.ttf");
+}
+
+@font-face {
+  font-family: "ChevyRayLoveBug";
+  src: url("../assets/ChevyRay\ -\ Love\ Bug.ttf");
+}
+
 body {
+  font-family: "ChevyRayLoveBug", sans-serif;
+
+  font-size: 24px;
   cursor: pointer;
 }
 
