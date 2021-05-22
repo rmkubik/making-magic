@@ -169,6 +169,7 @@ const App = () => {
   const [tiles, setTiles] = useState([[""]]);
   const [selected, setSelected] = useState([]);
   const [isMouseDown, setMouseDown] = useState(false);
+  const [mouseDownLocation, setMouseDownLocation] = useState();
 
   useEffect(() => {
     const initialTiles = constructMatrix(
@@ -218,29 +219,39 @@ const App = () => {
             })}
             onMouseDown={() => {
               setMouseDown(true);
-              isLocationSelected({ location, selected })
-                ? setSelected([])
-                : setSelected([location]);
+              setMouseDownLocation(location);
+
+              if (
+                // isMouseDownLocationSame &&
+                isLocationSelected({ location, selected })
+              ) {
+                // If we mouse up on the same location we mouse downed on
+                // and that location was selected, clear all selection.
+                setSelected([]);
+              } else {
+                setSelected([location]);
+              }
             }}
             onMouseUp={() => {
               setMouseDown(false);
             }}
             onMouseEnter={() => {
               if (isMouseDown) {
-                console.log(location);
                 addSelection(location);
               }
             }}
-            // onClick={() =>
-            //   isLocationSelected({ location, selected })
-            //     ? removeSelection(location)
-            //     : addSelection(location)
-            // }
             key={JSON.stringify(location)}
           />
         )}
         cellSize={`${spriteConfig.size * spriteConfig.scale}px`}
       />
+      <div
+        onClick={() => {
+          console.log(selected.map(getLocation(tiles)));
+        }}
+      >
+        {createSprite(items.BOTTLE.sprite)}
+      </div>
       {/* <pre>{JSON.stringify({ isMouseDown })}</pre> */}
     </>
   );
