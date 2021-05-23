@@ -436,8 +436,48 @@ const App = () => {
     return <p>Loading...</p>;
   }
 
+  const selectedIngredients = selected.map(getLocation(tiles));
+
+  let selectedRecipe;
+  const selectedRecipeEntry = Object.entries(recipes).find(
+    ([recipeKey, recipe]) => {
+      return compareArraysIgnoringOrder(
+        selectedIngredients,
+        recipe.ingredients
+      );
+    }
+  );
+
+  if (selectedRecipeEntry) {
+    [selectedRecipe] = selectedRecipeEntry;
+  }
+
+  console.log(selectedRecipe);
+
+  const castSelectedSpell = () => {
+    console.log(selected.map(getLocation(tiles)));
+
+    if (selectedRecipe) {
+      const recipe = recipes[selectedRecipe];
+
+      console.log(`You cast the "${selectedRecipe}" spell.`);
+
+      const newTiles = mapMatrix((tile, location) => {
+        if (isLocationSelected({ location, selected })) {
+          return "";
+        }
+
+        return tile;
+      });
+
+      setTiles(newTiles);
+      setSelected([]);
+      revealEffect(recipe.reveals[0]);
+    }
+  };
+
   return (
-    <div className="container">
+    <div className="container" onMouseUp={() => setSelected([])}>
       <div className="score-bar">
         <p>0000</p>
         <p>0300</p>
@@ -456,7 +496,7 @@ const App = () => {
               location,
               selected,
             })}
-            onMouseDown={() => {
+            onMouseDown={(e) => {
               setMouseDown(true);
               setMouseDownLocation(location);
 
@@ -466,19 +506,33 @@ const App = () => {
               ) {
                 // If we mouse up on the same location we mouse downed on
                 // and that location was selected, clear all selection.
-                setSelected([]);
+                // setSelected([]);
+
+                // If we mouse up on same location we have already selected, case the ability
+                // if (isLocationSelected({ location, selected })) {
+                castSelectedSpell();
+                // }
               } else {
                 setSelected([location]);
               }
+
+              e.stopPropagation();
             }}
-            onMouseUp={() => {
+            onMouseUp={(e) => {
               setMouseDown(false);
+
+              e.stopPropagation();
             }}
             onMouseEnter={() => {
               if (isMouseDown) {
                 addSelection(location);
               }
             }}
+            highlighted={
+              isLocationSelected({ location, selected }) &&
+              Boolean(selectedRecipeEntry)
+            }
+            spriteConfig={spriteConfig}
             key={JSON.stringify(location)}
           />
         )}
@@ -490,37 +544,7 @@ const App = () => {
         <div>{createSprite(items.HEART_FULL.sprite)}</div>
         <div>{createSprite(items.HEART_FULL.sprite)}</div>
       </div>
-      <div
-        onClick={() => {
-          console.log(selected.map(getLocation(tiles)));
-          const selectedIngredients = selected.map(getLocation(tiles));
-
-          Object.entries(recipes).some(([recipeKey, recipe]) => {
-            if (
-              compareArraysIgnoringOrder(
-                selectedIngredients,
-                recipe.ingredients
-              )
-            ) {
-              console.log(`You cast the "${recipeKey}" spell.`);
-
-              const newTiles = mapMatrix((tile, location) => {
-                if (isLocationSelected({ location, selected })) {
-                  return "";
-                }
-
-                return tile;
-              });
-
-              setTiles(newTiles);
-              setSelected([]);
-              revealEffect(recipe.reveals[0]);
-            }
-          });
-        }}
-      >
-        {createSprite(items.BOTTLE.sprite)}
-      </div>
+      {/* <div onClick={castSelectedSpell}>{createSprite(items.BOTTLE.sprite)}</div> */}
       {/* <ul>
         {levels[currentLevel].identificationTarget.effects.map((effect) => (
           <li key={effect.type}>{effect.revealed ? effect.type : "???"}</li>

@@ -60,6 +60,8 @@ const Tile = ({
   onMouseEnter,
   selectedNeighborDirections,
   items,
+  highlighted,
+  spriteConfig,
 }) => {
   const background = createBackground({ location, createSprite, selected });
   const item = createItem({ tile, createSprite, items });
@@ -78,6 +80,15 @@ const Tile = ({
       onMouseEnter={onMouseEnter}
     >
       {background}
+      {highlighted && (
+        <div
+          style={{
+            width: `${spriteConfig.size * spriteConfig.scale}px`,
+            height: `${spriteConfig.size * spriteConfig.scale}px`,
+          }}
+          className="highlight-anim"
+        />
+      )}
       {item}
       {selector}
     </div>

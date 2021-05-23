@@ -57,3 +57,21 @@ body {
   width: fit-content;
   margin: 0 auto;
 }
+
+@keyframes highlight {
+  from {
+    backdrop-filter: hue-rotate(0deg);
+  }
+
+  to {
+    backdrop-filter: hue-rotate(360deg);
+  }
+}
+
+.highlight-anim {
+  animation-name: highlight;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-duration: 800ms;
+  animation-timing-function: linear;
+}
