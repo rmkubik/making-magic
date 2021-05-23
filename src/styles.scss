@@ -34,3 +34,26 @@ body {
     }
   }
 }
+
+.health-bar {
+  display: flex;
+  flex-direction: row;
+}
+
+.score-bar {
+  display: flex;
+  flex-direction: row;
+
+  p {
+    margin: 0;
+  }
+
+  :first-child {
+    flex: 1;
+  }
+}
+
+.container {
+  width: fit-content;
+  margin: 0 auto;
+}

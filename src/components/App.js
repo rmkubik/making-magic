@@ -243,6 +243,15 @@ const App = () => {
     FAIRY: {
       sprite: { row: 2, col: 7 },
     },
+    HEART_FULL: {
+      sprite: { row: 3, col: 5 },
+    },
+    HEART_HALF: {
+      sprite: { row: 3, col: 6 },
+    },
+    HEART_EMPTY: {
+      sprite: { row: 3, col: 7 },
+    },
   });
   const [recipes, setRecipes] = useState({
     fireball: {
@@ -256,6 +265,10 @@ const App = () => {
     feed: {
       ingredients: ["MUSHROOM_RED"],
       reveals: ["hunger"],
+    },
+    growth: {
+      ingredients: ["ACORN", "ACORN"],
+      reveals: ["natural"],
     },
   });
 
@@ -424,7 +437,11 @@ const App = () => {
   }
 
   return (
-    <>
+    <div className="container">
+      <div className="score-bar">
+        <p>0000</p>
+        <p>0300</p>
+      </div>
       <Grid
         tiles={tiles}
         renderTile={(tile, location) => (
@@ -467,6 +484,12 @@ const App = () => {
         )}
         cellSize={`${spriteConfig.size * spriteConfig.scale}px`}
       />
+      <div className="health-bar">
+        <div>{createSprite(items.HEART_FULL.sprite)}</div>
+        <div>{createSprite(items.HEART_FULL.sprite)}</div>
+        <div>{createSprite(items.HEART_FULL.sprite)}</div>
+        <div>{createSprite(items.HEART_FULL.sprite)}</div>
+      </div>
       <div
         onClick={() => {
           console.log(selected.map(getLocation(tiles)));
@@ -498,13 +521,13 @@ const App = () => {
       >
         {createSprite(items.BOTTLE.sprite)}
       </div>
-      <ul>
+      {/* <ul>
         {levels[currentLevel].identificationTarget.effects.map((effect) => (
           <li key={effect.type}>{effect.revealed ? effect.type : "???"}</li>
         ))}
-      </ul>
+      </ul> */}
       {/* <pre>{JSON.stringify({ isMouseDown })}</pre> */}
-    </>
+    </div>
   );
 };
 
