@@ -11,6 +11,8 @@ import {
   getCrossDirections,
   getLocation,
   getNeighbors,
+  isLocationInBounds,
+  mapMatrix,
 } from "functional-game-utils";
 import { remove, update } from "ramda";
 import { pickRandomFromArray, randIntBetween } from "../utils/random";
@@ -122,7 +124,23 @@ const compareArraysIgnoringOrder = (a, b) => {
     return false;
   }
 
-  return a.every((aValue) => b.includes(aValue));
+  const aCopy = [...a].sort();
+  const bCopy = [...b].sort();
+
+  return aCopy.every((aValue, index) => aValue === bCopy[index]);
+};
+
+const areTilesSettled = (tiles) => {
+  let isAnyTileEmpty = false;
+
+  // misuse mapMatrix as a pseudo "Array.some" style function
+  mapMatrix((tile) => {
+    if (tile === "") {
+      isAnyTileEmpty = true;
+    }
+  }, tiles);
+
+  return !isAnyTileEmpty;
 };
 
 const App = () => {
@@ -235,6 +253,10 @@ const App = () => {
       ingredients: ["FEATHER", "FEATHER", "FEATHER", "FEATHER"],
       reveals: ["flight"],
     },
+    feed: {
+      ingredients: ["MUSHROOM_RED"],
+      reveals: ["hunger"],
+    },
   });
 
   useEffect(() => {
@@ -331,6 +353,72 @@ const App = () => {
     setLevels(newLevels);
   };
 
+  const applyGravity = () => {
+    const newTiles = mapMatrix((tile, location) => {
+      const lowerLocation = {
+        row: location.row + 1,
+        col: location.col,
+      };
+      const upperLocation = {
+        row: location.row - 1,
+        col: location.col,
+      };
+
+      // This tile is empty, drop one above down
+      if (tile === "") {
+        if (isLocationInBounds(tiles, upperLocation)) {
+          const upperTile = getLocation(tiles, upperLocation);
+
+          return upperTile;
+        }
+
+        // if no upper tile, spawn a new one
+        return "SKULL";
+      }
+
+      if (isLocationInBounds(tiles, lowerLocation)) {
+        const lowerTile = getLocation(tiles, lowerLocation);
+
+        // Lower tile is empty, drop down
+        if (lowerTile === "") {
+          return "";
+        }
+      }
+
+      // gravity doesn't affect us
+      return tile;
+    }, tiles);
+
+    setTiles(newTiles);
+  };
+
+  const startGravityTimeout = () => {
+    const applyGravityTimeout = () => {
+      if (areTilesSettled(tiles)) {
+        return;
+      }
+
+      applyGravity();
+
+      setTimeout(applyGravityTimeout, 500);
+    };
+
+    applyGravityTimeout();
+  };
+
+  useEffect(() => {
+    if (!levels[currentLevel]) {
+      return;
+    }
+
+    if (areTilesSettled(tiles)) {
+      return;
+    }
+
+    setTimeout(() => applyGravity(), 100);
+    // startGravityTimeout();
+  }, [tiles]);
+
   if (!levels[currentLevel]) {
     return <p>Loading...</p>;
   }
@@ -393,6 +481,16 @@ const App = () => {
             ) {
               console.log(`You cast the "${recipeKey}" spell.`);
 
+              const newTiles = mapMatrix((tile, location) => {
+                if (isLocationSelected({ location, selected })) {
+                  return "";
+                }
+
+                return tile;
+              });
+
+              setTiles(newTiles);
+              setSelected([]);
               revealEffect(recipe.reveals[0]);
             }
           });
