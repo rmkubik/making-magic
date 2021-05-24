@@ -34,10 +34,6 @@ const createSelector = ({
     return null;
   }
 
-  if (Object.values(selectedNeighborDirections).length > 0) {
-    console.log(selectedNeighborDirections);
-  }
-
   // left, up, right down
   return (
     <div className="selector">

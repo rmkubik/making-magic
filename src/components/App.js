@@ -271,6 +271,8 @@ const App = () => {
       reveals: ["natural"],
     },
   });
+  const [score, setScore] = useState(0);
+  const [hearts, setHearts] = useState([2, 2, 2, 2]);
 
   useEffect(() => {
     const pickEffectFromBag = createBag([
@@ -386,7 +388,7 @@ const App = () => {
         }
 
         // if no upper tile, spawn a new one
-        return "SKULL";
+        return pickRandomFromArray([...levels[currentLevel].items, "SKULL"]);
       }
 
       if (isLocationInBounds(tiles, lowerLocation)) {
@@ -394,6 +396,14 @@ const App = () => {
 
         // Lower tile is empty, drop down
         if (lowerTile === "") {
+          return "";
+        }
+      } else {
+        // this means we're at the bottom of the grid
+        if (tile === "SKULL") {
+          // damage the heart below you
+          setHearts(update(location.col, hearts[location.col] - 1), hearts);
+
           return "";
         }
       }
@@ -452,8 +462,6 @@ const App = () => {
     [selectedRecipe] = selectedRecipeEntry;
   }
 
-  console.log(selectedRecipe);
-
   const castSelectedSpell = () => {
     console.log(selected.map(getLocation(tiles)));
 
@@ -470,6 +478,10 @@ const App = () => {
         return tile;
       });
 
+      // lose a half heart with a single match
+      // get zero points with a 2 match
+      // get normal pts with 3 length and up
+      setScore(score + recipe.ingredients.length * 10);
       setTiles(newTiles);
       setSelected([]);
       revealEffect(recipe.reveals[0]);
@@ -479,7 +491,7 @@ const App = () => {
   return (
     <div className="container" onMouseUp={() => setSelected([])}>
       <div className="score-bar">
-        <p>0000</p>
+        <p>{String(score).padStart(4, "0")}</p>
         <p>0300</p>
       </div>
       <Grid
@@ -539,10 +551,20 @@ const App = () => {
         cellSize={`${spriteConfig.size * spriteConfig.scale}px`}
       />
       <div className="health-bar">
+        {hearts.map((value) => {
+          switch (value) {
+            case 2:
+              return createSprite(items.HEART_FULL.sprite);
+            case 1:
+              return createSprite(items.HEART_HALF.sprite);
+            default:
+            case 0:
+              return createSprite(items.HEART_EMPTY.sprite);
+          }
+        })}
+        {/* <div>{createSprite(items.HEART_FULL.sprite)}</div>
         <div>{createSprite(items.HEART_FULL.sprite)}</div>
-        <div>{createSprite(items.HEART_FULL.sprite)}</div>
-        <div>{createSprite(items.HEART_FULL.sprite)}</div>
-        <div>{createSprite(items.HEART_FULL.sprite)}</div>
+        <div>{createSprite(items.HEART_FULL.sprite)}</div> */}
       </div>
       {/* <div onClick={castSelectedSpell}>{createSprite(items.BOTTLE.sprite)}</div> */}
       {/* <ul>
