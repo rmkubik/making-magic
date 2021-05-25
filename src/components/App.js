@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import Grid from "./Grid";
 import Tile from "./Tile";
 import SpriteSheet from "./SpriteSheet";
@@ -551,15 +551,25 @@ const App = () => {
         cellSize={`${spriteConfig.size * spriteConfig.scale}px`}
       />
       <div className="health-bar">
-        {hearts.map((value) => {
+        {hearts.map((value, index) => {
           switch (value) {
             case 2:
-              return createSprite(items.HEART_FULL.sprite);
+              return (
+                <Fragment key={index}>
+                  {createSprite(items.HEART_FULL.sprite)}
+                </Fragment>
+              );
             case 1:
-              return createSprite(items.HEART_HALF.sprite);
+              return (
+                <Fragment key={index}>
+                  {createSprite(items.HEART_HALF.sprite)}
+                </Fragment>
+              );
             default:
             case 0:
-              return createSprite(items.HEART_EMPTY.sprite);
+              <Fragment key={index}>
+                {createSprite(items.HEART_EMPTY.sprite)}
+              </Fragment>;
           }
         })}
         {/* <div>{createSprite(items.HEART_FULL.sprite)}</div>
