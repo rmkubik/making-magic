@@ -38,6 +38,8 @@ body {
 .health-bar {
   display: flex;
   flex-direction: row;
+
+  margin-top: 4px;
 }
 
 .score-bar {
@@ -50,6 +52,14 @@ body {
 
   :first-child {
     flex: 1;
+  }
+}
+
+.heart-container {
+  position: relative;
+
+  & > * {
+    position: absolute;
   }
 }
 

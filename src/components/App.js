@@ -1,6 +1,7 @@
 import React, { Fragment, useEffect, useState } from "react";
 import Grid from "./Grid";
 import Tile from "./Tile";
+import Heart from "./Heart";
 import SpriteSheet from "./SpriteSheet";
 import sprites from "../../assets/sprites.png";
 import {
@@ -147,6 +148,52 @@ const areAllItemsEqual = (items) => {
   return items.every((item) => item === items[0]);
 };
 
+const doItemsMatch = (a, b) => {
+  switch (a) {
+    case "ANY_INGREDIENT":
+      if (b !== "SKULL" && b !== "CLOUD") {
+        return true;
+      }
+      break;
+    default:
+      if (b === a) {
+        return true;
+      }
+      break;
+  }
+
+  return false;
+};
+
+const getSelectedRecipe = ({ selected, recipes, tiles }) => {
+  const selectedIngredients = selected.map(getLocation(tiles));
+
+  let selectedRecipe = recipes.find((recipe) => {
+    switch (recipe.ingredients.type) {
+      case "MATCHING":
+        if (areAllItemsEqual(selectedIngredients)) {
+          if (doItemsMatch(recipe.ingredients.item, selectedIngredients[0])) {
+            const { min, max = Infinity } = recipe.ingredients;
+
+            if (
+              selectedIngredients.length >= min &&
+              selectedIngredients.length <= max
+            ) {
+              return true;
+            }
+          }
+        }
+        break;
+      default:
+        break;
+    }
+
+    return false;
+  });
+
+  return selectedRecipe;
+};
+
 const App = () => {
   const [tiles, setTiles] = useState([[""]]);
   const [selected, setSelected] = useState([]);
@@ -228,27 +275,16 @@ const App = () => {
     HEART_EMPTY: {
       sprite: { row: 3, col: 7 },
     },
-  });
-  const [recipes, setRecipes] = useState({
-    fireball: {
-      ingredients: ["LEAF_GREEN", "LEAF_GREEN", "MUSHROOM_RED"],
-      reveals: ["flammable"],
+    CLOUD: {
+      sprite: { row: 2, col: 5 },
     },
-    featherfall: {
-      ingredients: ["FEATHER", "FEATHER", "FEATHER", "FEATHER"],
-      reveals: ["flight"],
-    },
-    feed: {
-      ingredients: ["MUSHROOM_RED"],
-      reveals: ["hunger"],
-    },
-    growth: {
-      ingredients: ["ACORN", "ACORN"],
-      reveals: ["natural"],
+    SHIELD: {
+      sprite: { row: 3, col: 8 },
     },
   });
   const [score, setScore] = useState(0);
   const [hearts, setHearts] = useState([2, 2, 2, 2]);
+  const [shields, setShields] = useState([0, 0, 0, 0]);
 
   useEffect(() => {
     setLevels([
@@ -258,6 +294,7 @@ const App = () => {
           {
             ingredients: {
               type: "MATCHING",
+              item: "ANY_INGREDIENT",
               min: 1,
               max: 1,
             },
@@ -271,6 +308,7 @@ const App = () => {
           {
             ingredients: {
               type: "MATCHING",
+              item: "ANY_INGREDIENT",
               min: 2,
               max: 2,
             },
@@ -279,6 +317,7 @@ const App = () => {
           {
             ingredients: {
               type: "MATCHING",
+              item: "ANY_INGREDIENT",
               min: 3,
               max: 3,
             },
@@ -299,7 +338,7 @@ const App = () => {
                 type: "SCORE",
               },
               {
-                type: "BONUS_POINTS",
+                type: "BOMB",
               },
             ],
           },
@@ -329,7 +368,7 @@ const App = () => {
                 type: "SCORE",
               },
               {
-                type: "FEATHER_FILL",
+                type: "CLOUDS",
               },
             ],
           },
@@ -428,7 +467,7 @@ const App = () => {
         // this means we're at the bottom of the grid
         if (tile === "SKULL") {
           // damage the heart below you
-          setHearts(update(location.col, hearts[location.col] - 1), hearts);
+          setHearts(update(location.col, hearts[location.col] - 1, hearts));
 
           return "";
         }
@@ -472,48 +511,113 @@ const App = () => {
     return <p>Loading...</p>;
   }
 
-  const selectedIngredients = selected.map(getLocation(tiles));
-
-  let selectedRecipe;
-  const selectedRecipeEntry = Object.entries(recipes).find(
-    ([recipeKey, recipe]) => {
-      return compareArraysIgnoringOrder(
-        selectedIngredients,
-        recipe.ingredients
-      );
-    }
-  );
-
-  if (selectedRecipeEntry) {
-    [selectedRecipe] = selectedRecipeEntry;
-  }
-
-  // TODO: Look for wildcard recipes
-  // 1 of a kind, remove it, damage a heart in that column, no points
-  // 2 of a kind, remove them, no points
-  // 3 of a kind, remove them, points
-  // 4+ of a kind, remove them, points, cast a spell
+  const selectedRecipe = getSelectedRecipe({
+    selected,
+    recipes: levels[currentLevel].recipes,
+    tiles,
+  });
 
   const castSelectedSpell = () => {
-    console.log(selected.map(getLocation(tiles)));
+    let newScore = score;
+    let newTiles = tiles;
+    let newHearts = hearts;
+    let newShields = shields;
 
-    if (selectedRecipe) {
-      const recipe = recipes[selectedRecipe];
-
-      console.log(`You cast the "${selectedRecipe}" spell.`);
-
-      const newTiles = mapMatrix((tile, location) => {
+    const updateSelectedTiles = (newTile, currentTiles) => {
+      return mapMatrix((tile, location) => {
         if (isLocationSelected({ location, selected })) {
-          return "";
+          return newTile;
         }
 
         return tile;
+      }, currentTiles);
+    };
+
+    newTiles = updateSelectedTiles("", newTiles);
+
+    // clean up previous applied effects
+    // degrade clouds
+    newTiles = mapMatrix((tile) => {
+      if (tile === "CLOUD") {
+        return "";
+      }
+
+      return tile;
+    }, newTiles);
+
+    // degrade shields
+    newShields = newShields.map((shield) => (shield > 0 ? shield - 1 : 0));
+
+    // act on new recipes
+    if (selectedRecipe) {
+      selectedRecipe.effects.forEach((effect) => {
+        console.log(effect);
+
+        switch (effect.type) {
+          case "DAMAGE_COLUMN":
+            newHearts = selected.reduce(
+              (currentHearts, selectedLocation) =>
+                update(
+                  selectedLocation.col,
+                  hearts[selectedLocation.col] - effect.value,
+                  currentHearts
+                ),
+              hearts
+            );
+            break;
+
+          case "SCORE":
+            newScore = score + selected.length * 10;
+            break;
+
+          case "BONUS_SCORE":
+            newScore = score + 50;
+            break;
+
+          case "BOMB":
+            newTiles = mapMatrix((tile, location) => {
+              const neighbors = getNeighbors(
+                getCrossDirections,
+                newTiles,
+                location
+              );
+
+              if (
+                neighbors.some((neighbor) =>
+                  isLocationSelected({ location: neighbor, selected })
+                )
+              ) {
+                return "";
+              }
+
+              return tile;
+            }, newTiles);
+            break;
+
+          case "CLOUDS":
+            newTiles = updateSelectedTiles("CLOUD", newTiles);
+            break;
+
+          case "SHIELD_COLUMNS":
+            newShields = selected.reduce(
+              (currentShields, selectedLocation) =>
+                update(
+                  selectedLocation.col,
+                  shields[selectedLocation.col] + 1,
+                  currentShields
+                ),
+              shields
+            );
+            break;
+
+          default:
+            break;
+        }
       });
 
-      // lose a half heart with a single match
-      // get zero points with a 2 match
-      // get normal pts with 3 length and up
-      setScore(score + recipe.ingredients.length * 10);
+      setScore(newScore);
+      setHearts(newHearts);
+      setShields(newShields);
       setTiles(newTiles);
       setSelected([]);
     }
@@ -573,7 +677,7 @@ const App = () => {
             }}
             highlighted={
               isLocationSelected({ location, selected }) &&
-              Boolean(selectedRecipeEntry)
+              Boolean(selectedRecipe)
             }
             spriteConfig={spriteConfig}
             key={JSON.stringify(location)}
@@ -583,27 +687,20 @@ const App = () => {
       />
       <div className="health-bar">
         {hearts.map((value, index) => {
-          switch (value) {
-            case 2:
-              return (
-                <Fragment key={index}>
-                  {createSprite(items.HEART_FULL.sprite)}
-                </Fragment>
-              );
-            case 1:
-              return (
-                <Fragment key={index}>
-                  {createSprite(items.HEART_HALF.sprite)}
-                </Fragment>
-              );
-            case 0:
-            default:
-              return (
-                <Fragment key={index}>
-                  {createSprite(items.HEART_EMPTY.sprite)}
-                </Fragment>
-              );
-          }
+          console.log(shields[index]);
+          return (
+            <div
+              key={index}
+              className="heart-container"
+              style={{
+                width: `${spriteConfig.size * spriteConfig.scale}px`,
+                height: `${spriteConfig.size * spriteConfig.scale}px`,
+              }}
+            >
+              <Heart value={value} createSprite={createSprite} items={items} />
+              {shields[index] > 0 ? createSprite(items.SHIELD.sprite) : null}
+            </div>
+          );
         })}
       </div>
       {/* <pre>{JSON.stringify({ isMouseDown })}</pre> */}
