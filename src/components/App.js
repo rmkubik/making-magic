@@ -556,15 +556,17 @@ const App = () => {
       selectedRecipe.effects.forEach((effect) => {
         switch (effect.type) {
           case "DAMAGE_COLUMN":
-            newHearts = selected.reduce(
-              (currentHearts, selectedLocation) =>
-                update(
+            newHearts = selected.reduce((currentHearts, selectedLocation) => {
+              if (shields[selectedLocation.col] <= 0) {
+                return update(
                   selectedLocation.col,
                   hearts[selectedLocation.col] - effect.value,
                   currentHearts
-                ),
-              hearts
-            );
+                );
+              }
+
+              return currentHearts;
+            }, hearts);
             break;
 
           case "SCORE":
@@ -688,7 +690,6 @@ const App = () => {
       />
       <div className="health-bar">
         {hearts.map((value, index) => {
-          console.log(shields[index]);
           return (
             <div
               key={index}
