@@ -143,6 +143,10 @@ const areTilesSettled = (tiles) => {
   return !isAnyTileEmpty;
 };
 
+const areAllItemsEqual = (items) => {
+  return items.every((item) => item === items[0]);
+};
+
 const App = () => {
   const [tiles, setTiles] = useState([[""]]);
   const [selected, setSelected] = useState([]);
@@ -151,34 +155,6 @@ const App = () => {
   const [levels, setLevels] = useState([]);
   const [currentLevel, setCurrentLevel] = useState(0);
   const [prevCurrentLevel, setPrevCurrentLevel] = useState();
-  const [effects, setEffects] = useState([
-    "flammable",
-    "possessed", // a spirit posses this item
-    "thirst", // needs to hit enemies
-    "vampirism",
-    "disintegration",
-    "corruption",
-    "icy",
-    "undying",
-    "magnetic",
-    "stonecutter",
-    "trickster",
-    "ghastly",
-    "elastic",
-    "exploding",
-    "draconic",
-    "binding",
-    "forceful",
-    "precise",
-    "lawful",
-    "chaotic",
-    "lightbane",
-    "darkbane",
-    "animated",
-    "sentient",
-    "sacred",
-    "cursed",
-  ]);
   const [items, setItems] = useState({
     BOTTLE: {
       sprite: { row: 0, col: 0 },
@@ -275,24 +251,107 @@ const App = () => {
   const [hearts, setHearts] = useState([2, 2, 2, 2]);
 
   useEffect(() => {
-    const pickEffectFromBag = createBag([
-      "flammable",
-      "flight",
-      "hunger",
-      "natural",
-    ]);
-
     setLevels([
       {
         items: ["ACORN", "LEAF_GREEN", "FEATHER", "MUSHROOM_RED"],
-        identificationTarget: {
-          effects: constructArray(() => {
-            return { type: pickEffectFromBag(), revealed: false };
-          }, 3),
-        },
+        recipes: [
+          {
+            ingredients: {
+              type: "MATCHING",
+              min: 1,
+              max: 1,
+            },
+            effects: [
+              {
+                type: "DAMAGE_COLUMN",
+                value: 1,
+              },
+            ],
+          },
+          {
+            ingredients: {
+              type: "MATCHING",
+              min: 2,
+              max: 2,
+            },
+            effects: [],
+          },
+          {
+            ingredients: {
+              type: "MATCHING",
+              min: 3,
+              max: 3,
+            },
+            effects: [
+              {
+                type: "SCORE",
+              },
+            ],
+          },
+          {
+            ingredients: {
+              type: "MATCHING",
+              item: "ACORN",
+              min: 4,
+            },
+            effects: [
+              {
+                type: "SCORE",
+              },
+              {
+                type: "BONUS_POINTS",
+              },
+            ],
+          },
+          {
+            ingredients: {
+              type: "MATCHING",
+              item: "LEAF_GREEN",
+              min: 4,
+            },
+            effects: [
+              {
+                type: "SCORE",
+              },
+              {
+                type: "BONUS_POINTS",
+              },
+            ],
+          },
+          {
+            ingredients: {
+              type: "MATCHING",
+              item: "FEATHER",
+              min: 4,
+            },
+            effects: [
+              {
+                type: "SCORE",
+              },
+              {
+                type: "FEATHER_FILL",
+              },
+            ],
+          },
+          {
+            ingredients: {
+              type: "MATCHING",
+              item: "MUSHROOM_RED",
+              min: 4,
+            },
+            effects: [
+              {
+                type: "SCORE",
+              },
+              {
+                type: "SHIELD_COLUMNS",
+              },
+            ],
+          },
+        ],
       },
     ]);
-  }, [setLevels, effects]);
+  }, [setLevels]);
 
   useEffect(() => {
     if (!levels[currentLevel]) {
@@ -304,11 +363,7 @@ const App = () => {
     }
 
     const initialTiles = constructMatrix(
-      () => {
-        // const itemKeys = Object.keys(omit(["BOTTLE"], items));
-
-        return pickRandomFromArray(levels[currentLevel].items);
-      },
+      () => pickRandomFromArray(levels[currentLevel].items),
       {
         height: 6,
         width: 4,
@@ -320,7 +375,13 @@ const App = () => {
   }, [setTiles, levels, currentLevel]);
 
   const addSelection = (location) => {
-    setSelected([...selected, location]);
+    if (
+      !selected.some((selectedLocation) =>
+        compareLocations(selectedLocation, location)
+      )
+    ) {
+      setSelected([...selected, location]);
+    }
   };
 
   const removeSelection = (location) => {
@@ -331,41 +392,6 @@ const App = () => {
     const newSelected = remove(removedSelectionIndex, 1, selected);
 
     setSelected(newSelected);
-  };
-
-  const revealEffect = (targetType) => {
-    const currentlySelectedLevel = levels[currentLevel];
-
-    const revealedEffectIndex =
-      currentlySelectedLevel.identificationTarget.effects.findIndex(
-        (effect) => effect.type === targetType
-      );
-
-    if (revealedEffectIndex < 0) {
-      return;
-    }
-
-    const newEffects = update(
-      revealedEffectIndex,
-      {
-        ...currentlySelectedLevel.identificationTarget.effects[
-          revealedEffectIndex
-        ],
-        revealed: true,
-      },
-      currentlySelectedLevel.identificationTarget.effects
-    );
-
-    const newLevels = update(currentLevel, {
-      ...currentlySelectedLevel,
-      identificationTarget: {
-        ...currentlySelectedLevel.identificationTarget,
-        effects: newEffects,
-      },
-      levels,
-    });
-
-    setLevels(newLevels);
   };
 
   const applyGravity = () => {
@@ -462,6 +488,12 @@ const App = () => {
     [selectedRecipe] = selectedRecipeEntry;
   }
 
+  // TODO: Look for wildcard recipes
+  // 1 of a kind, remove it, damage a heart in that column, no points
+  // 2 of a kind, remove them, no points
+  // 3 of a kind, remove them, points
+  // 4+ of a kind, remove them, points, cast a spell
+
   const castSelectedSpell = () => {
     console.log(selected.map(getLocation(tiles)));
 
@@ -484,7 +516,6 @@ const App = () => {
       setScore(score + recipe.ingredients.length * 10);
       setTiles(newTiles);
       setSelected([]);
-      revealEffect(recipe.reveals[0]);
     }
   };
 
@@ -565,23 +596,16 @@ const App = () => {
                   {createSprite(items.HEART_HALF.sprite)}
                 </Fragment>
               );
-            default:
             case 0:
-              <Fragment key={index}>
-                {createSprite(items.HEART_EMPTY.sprite)}
-              </Fragment>;
+            default:
+              return (
+                <Fragment key={index}>
+                  {createSprite(items.HEART_EMPTY.sprite)}
+                </Fragment>
+              );
           }
         })}
-        {/* <div>{createSprite(items.HEART_FULL.sprite)}</div>
-        <div>{createSprite(items.HEART_FULL.sprite)}</div>
-        <div>{createSprite(items.HEART_FULL.sprite)}</div> */}
       </div>
-      {/* <div onClick={castSelectedSpell}>{createSprite(items.BOTTLE.sprite)}</div> */}
-      {/* <ul>
-        {levels[currentLevel].identificationTarget.effects.map((effect) => (
-          <li key={effect.type}>{effect.revealed ? effect.type : "???"}</li>
-        ))}
-      </ul> */}
       {/* <pre>{JSON.stringify({ isMouseDown })}</pre> */}
     </div>
   );
