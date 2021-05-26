@@ -289,6 +289,7 @@ const App = () => {
   useEffect(() => {
     setLevels([
       {
+        target: 300,
         items: ["ACORN", "LEAF_GREEN", "FEATHER", "MUSHROOM_RED"],
         recipes: [
           {
@@ -467,7 +468,9 @@ const App = () => {
         // this means we're at the bottom of the grid
         if (tile === "SKULL") {
           // damage the heart below you
-          setHearts(update(location.col, hearts[location.col] - 1, hearts));
+          if (shields[location.col] <= 0) {
+            setHearts(update(location.col, hearts[location.col] - 1, hearts));
+          }
 
           return "";
         }
@@ -551,8 +554,6 @@ const App = () => {
     // act on new recipes
     if (selectedRecipe) {
       selectedRecipe.effects.forEach((effect) => {
-        console.log(effect);
-
         switch (effect.type) {
           case "DAMAGE_COLUMN":
             newHearts = selected.reduce(
@@ -627,7 +628,7 @@ const App = () => {
     <div className="container" onMouseUp={() => setSelected([])}>
       <div className="score-bar">
         <p>{String(score).padStart(4, "0")}</p>
-        <p>0300</p>
+        <p>{String(levels[currentLevel].target).padStart(4, "0")}</p>
       </div>
       <Grid
         tiles={tiles}
