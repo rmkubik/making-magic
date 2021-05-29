@@ -13,6 +13,8 @@ body {
 
   font-size: 24px;
   cursor: pointer;
+
+  margin: 0;
 }
 
 .tile {
@@ -64,8 +66,12 @@ body {
 }
 
 .container {
-  width: fit-content;
-  margin: 0 auto;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 @keyframes highlight {
@@ -84,4 +90,17 @@ body {
   animation-direction: alternate;
   animation-duration: 1000ms;
   animation-timing-function: linear;
+}
+
+button {
+  font-family: inherit;
+  background-color: transparent;
+  border: 3px solid black;
+  padding: 8px;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: aliceblue;
+    cursor: pointer;
+  }
 }

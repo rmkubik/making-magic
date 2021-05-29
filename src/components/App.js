@@ -626,86 +626,101 @@ const App = () => {
     }
   };
 
+  if (hearts.every((heart) => heart <= 0)) {
+    return (
+      <div className="container">
+        <p>Game Over!</p>
+        <button onClick={() => window.location.reload()}>Restart</button>
+      </div>
+    );
+  }
+
   return (
     <div className="container" onMouseUp={() => setSelected([])}>
-      <div className="score-bar">
-        <p>{String(score).padStart(4, "0")}</p>
-        <p>{String(levels[currentLevel].target).padStart(4, "0")}</p>
-      </div>
-      <Grid
-        tiles={tiles}
-        renderTile={(tile, location) => (
-          <Tile
-            createSprite={createSprite}
-            tile={tile}
-            items={items}
-            location={location}
-            selected={isLocationSelected({ location, selected })}
-            selectedNeighborDirections={getSelectedNeighborDirections({
-              tiles,
-              location,
-              selected,
-            })}
-            onMouseDown={(e) => {
-              setMouseDown(true);
-              setMouseDownLocation(location);
+      <div>
+        <div className="score-bar">
+          <p>{String(score).padStart(4, "0")}</p>
+          <p>{String(levels[currentLevel].target).padStart(4, "0")}</p>
+        </div>
+        <Grid
+          tiles={tiles}
+          renderTile={(tile, location) => (
+            <Tile
+              createSprite={createSprite}
+              tile={tile}
+              items={items}
+              location={location}
+              selected={isLocationSelected({ location, selected })}
+              selectedNeighborDirections={getSelectedNeighborDirections({
+                tiles,
+                location,
+                selected,
+              })}
+              onMouseDown={(e) => {
+                setMouseDown(true);
+                setMouseDownLocation(location);
 
-              if (
-                // isMouseDownLocationSame &&
-                isLocationSelected({ location, selected })
-              ) {
-                // If we mouse up on the same location we mouse downed on
-                // and that location was selected, clear all selection.
-                // setSelected([]);
+                if (
+                  // isMouseDownLocationSame &&
+                  isLocationSelected({ location, selected })
+                ) {
+                  // If we mouse up on the same location we mouse downed on
+                  // and that location was selected, clear all selection.
+                  // setSelected([]);
 
-                // If we mouse up on same location we have already selected, case the ability
-                // if (isLocationSelected({ location, selected })) {
-                castSelectedSpell();
-                // }
-              } else {
-                setSelected([location]);
-              }
+                  // If we mouse up on same location we have already selected, case the ability
+                  // if (isLocationSelected({ location, selected })) {
+                  castSelectedSpell();
+                  // }
+                } else {
+                  setSelected([location]);
+                }
 
-              e.stopPropagation();
-            }}
-            onMouseUp={(e) => {
-              setMouseDown(false);
-
-              e.stopPropagation();
-            }}
-            onMouseEnter={() => {
-              if (isMouseDown) {
-                addSelection(location);
-              }
-            }}
-            highlighted={
-              isLocationSelected({ location, selected }) &&
-              Boolean(selectedRecipe)
-            }
-            spriteConfig={spriteConfig}
-            key={JSON.stringify(location)}
-          />
-        )}
-        cellSize={`${spriteConfig.size * spriteConfig.scale}px`}
-      />
-      <div className="health-bar">
-        {hearts.map((value, index) => {
-          return (
-            <div
-              key={index}
-              className="heart-container"
-              style={{
-                width: `${spriteConfig.size * spriteConfig.scale}px`,
-                height: `${spriteConfig.size * spriteConfig.scale}px`,
+                e.stopPropagation();
               }}
-            >
-              <Heart value={value} createSprite={createSprite} items={items} />
-              {shields[index] > 0 ? createSprite(items.SHIELD.sprite) : null}
-            </div>
-          );
-        })}
+              onMouseUp={(e) => {
+                setMouseDown(false);
+
+                e.stopPropagation();
+              }}
+              onMouseEnter={() => {
+                if (isMouseDown) {
+                  addSelection(location);
+                }
+              }}
+              highlighted={
+                isLocationSelected({ location, selected }) &&
+                Boolean(selectedRecipe)
+              }
+              spriteConfig={spriteConfig}
+              key={JSON.stringify(location)}
+            />
+          )}
+          cellSize={`${spriteConfig.size * spriteConfig.scale}px`}
+        />
+        <div className="health-bar">
+          {hearts.map((value, index) => {
+            return (
+              <div
+                key={index}
+                className="heart-container"
+                style={{
+                  width: `${spriteConfig.size * spriteConfig.scale}px`,
+                  height: `${spriteConfig.size * spriteConfig.scale}px`,
+                }}
+              >
+                <Heart
+                  value={value}
+                  createSprite={createSprite}
+                  items={items}
+                />
+                {shields[index] > 0 ? createSprite(items.SHIELD.sprite) : null}
+              </div>
+            );
+          })}
+        </div>
+        {/* <pre>{JSON.stringify({ isMouseDown })}</pre> */}
       </div>
-      {/* <pre>{JSON.stringify({ isMouseDown })}</pre> */}
     </div>
   );
 };
