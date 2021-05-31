@@ -104,3 +104,20 @@ button {
     cursor: pointer;
   }
 }
+
+@keyframes white-flash {
+  from {
+    backdrop-filter: brightness(100%);
+  }
+
+  to {
+    backdrop-filter: brightness(1000%);
+  }
+}
+
+.white-flash-anim {
+  animation-name: white-flash;
+  animation-iteration-count: 2;
+  animation-duration: 100ms;
+  animation-timing-function: linear;
+}

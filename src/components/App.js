@@ -285,6 +285,8 @@ const App = () => {
   const [score, setScore] = useState(0);
   const [hearts, setHearts] = useState([2, 2, 2, 2]);
   const [shields, setShields] = useState([0, 0, 0, 0]);
+  const [nextAnimationId, setNextAnimationId] = useState(0);
+  const [animations, setAnimations] = useState([]);
 
   useEffect(() => {
     setLevels([
@@ -432,6 +434,40 @@ const App = () => {
     const newSelected = remove(removedSelectionIndex, 1, selected);
 
     setSelected(newSelected);
+  };
+
+  // TODO: none of this id and animatoin stuff is going to work right now
+  // if we set more than one animation per move
+  const getAnimationId = () => {
+    const animationId = nextAnimationId;
+
+    setNextAnimationId(nextAnimationId + 1);
+
+    return animationId;
+  };
+
+  const addAnimation = (...newAnimations) => {
+    const identifiedAnimations = newAnimations.map((animation) => {
+      return { ...animation, id: getAnimationId() };
+    });
+
+    setAnimations([
+      ...animations,
+      {
+        target,
+        name,
+        id: getAnimationId(),
+      },
+    ]);
+  };
+
+  const finishAnimation = (id) => {
+    const animationIndex = animations.findIndex(
+      (animation) => animation.id === id
+    );
+    const newAnimations = remove(animationIndex, 1, animations);
+
+    setAnimations(newAnimations);
   };
 
   const applyGravity = () => {
@@ -715,6 +751,13 @@ const App = () => {
                   items={items}
                 />
                 {shields[index] > 0 ? createSprite(items.SHIELD.sprite) : null}
+                <div
+                  style={{
+                    width: `${spriteConfig.size * spriteConfig.scale}px`,
+                    height: `${spriteConfig.size * spriteConfig.scale}px`,
+                  }}
+                  className={value}
+                />
               </div>
             );
           })}
