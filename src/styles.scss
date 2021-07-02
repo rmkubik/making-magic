@@ -1,20 +1,18 @@
 @font-face {
-  font-family: "ChevyRayLantern";
-  src: url("../assets/ChevyRay\ -\ Lantern.ttf");
-}
-
-@font-face {
   font-family: "ChevyRayLoveBug";
-  src: url("../assets/ChevyRay\ -\ Love\ Bug.ttf");
+  src: url("../assets/chevyray_-_love_bug-webfont.woff2") format("woff2"),
+    url("../assets/chevyray_-_love_bug-webfont.woff") format("woff");
 }
 
 body {
-  font-family: "ChevyRayLoveBug", sans-serif;
+  font-family: "ChevyRayLoveBug";
 
   font-size: 24px;
   cursor: pointer;
 
   margin: 0;
+
+  background-color: white;
 }
 
 .tile {

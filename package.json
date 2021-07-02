@@ -5,12 +5,20 @@
   "main": "index.js",
   "scripts": {
     "start": "parcel src/index.html",
-    "build": "parcel build src/index.html"
+    "build": "run-s build:src zip:rm  zip:dist",
+    "build:src": "parcel build src/index.html --public-url ./",
+    "build:zip": "run-s build:src zip:rm  zip:dist",
+    "zip:rm": "rm -f build.zip",
+    "zip:dist": "zip -r build.zip dist",
+    "deploy": "run-s build:src deploy:html",
+    "deploy:html": "butler push dist rmkubik/making-magic:html"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "npm-run-all": "^4.1.5",
     "parcel-bundler": "^1.12.5",
+    "parcel-plugin-clean-dist": "0.0.6",
     "sass": "^1.32.13"
   },
   "dependencies": {
